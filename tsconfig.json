@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es5", // Puede ser esnext dependiendo de tu entorno de destino
+    "lib": ["dom", "dom.iterable", "esnext"], // Librerías de tiempo de ejecución
+    "allowJs": true, // Permite archivos js
+    "skipLibCheck": true, // Omitir la verificación de tipos en los archivos de declaración de todas las librerías
+    "strict": true, // Habilitar todas las opciones estrictas de tipo
+    "forceConsistentCasingInFileNames": true, // Forzar consistencia en la capitalización de los nombres de archivos
+    "noEmit": false, // No emitir archivos de salida (Next.js lo hace por ti)
+    "esModuleInterop": true, // Permite importaciones por defecto de módulos con exportaciones no por defecto
+    "module": "esnext", // Estilo de módulo
+    "moduleResolution": "node", // Estrategia de resolución de módulos
+    "resolveJsonModule": true, // Incluir módulos JSON
+    "isolatedModules": true, // Asegurar que cada archivo puede ser compilado por separado
+    "jsx": "preserve", // Dejar que Next.js maneje JSX (puede ser "react-jsx" también)
+    "incremental": true, // Habilitar la compilación incremental para acelerar las construcciones subsiguientes
+    "baseUrl": ".", // Base para la resolución de módulos no relativos
+    "paths": {
+      "@/components/*": ["src/components/*"],
+      "@/utils/*": ["src/utils/*"]
+      // Añadir alias adicionales si es necesario
+    }
+  },
+  "exclude": ["node_modules"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"]
+}

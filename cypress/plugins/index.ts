@@ -1,40 +1,74 @@
 /// <reference types="cypress" />
-import mysql from "mysql";
-
-// This function is called when a project is opened or re-opened (e.g. due to
-// the project's config changing)
+import mysql, { Connection, MysqlError } from 'mysql';
+import { MongoClient } from 'mongodb';
 
 /**
- * @type {Cypress.PluginConfig}
+ * Creates a new MySQL connection using the provided database configuration.
  */
-// For connecting to SQL Server
-const queryTestDb = (query: string, config: Cypress.PluginConfigOptions) => {
-  // creates a new mysql connection using credentials from cypress.json env's
-  const connection = mysql.createConnection(config.env.db);
-  // start connection to db
+function connectToMySQL(dbConfig: mysql.ConnectionConfig): Connection {
+  const connection: Connection = mysql.createConnection(dbConfig);
   connection.connect();
-  // exec query + disconnect to db as a Promise
+  return connection;
+}
+
+/**
+ * Executes a MySQL query and returns a promise that resolves with the results.
+ */
+function queryMySQL(connection: Connection, query: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
-    connection.query(query, (error: mysql.MysqlError | null, results: any) => {
+    connection.query(query, (error: MysqlError | null, results: unknown) => {
       if (error) reject(error);
-      else {
-        connection.end();
-        return resolve(results);
-      }
+      else resolve(results);
     });
   });
-};
+}
 
-// eslint-disable-next-line import/no-anonymous-default-export
-export default (on: Cypress.PluginEvents, config: Cypress.PluginConfigOptions) => {
+/**
+ * Connects to MongoDB and returns the client.
+ */
+async function connectToMongoDB(mongoDbUri: string): Promise<MongoClient> {
+  const client: MongoClient = new MongoClient(mongoDbUri);
+  await client.connect();
+  return client;
+}
+
+/**
+ * Cypress Plugin Configuration
+ */
+export default (on: Cypress.PluginEvents, config: Cypress.PluginConfigOptions): void => {
+  // MySQL task
   on('task', {
-    queryDb: (query: string) => {
-      return queryTestDb(query, config);
+    queryDb: (query: string): Promise<unknown> => {
+      const connection = connectToMySQL(config.env.db as mysql.ConnectionConfig);
+      return queryMySQL(connection, query).finally(() => connection.end());
     },
-  }); // For running SQL query
+  });
 
-  // `on` is used to hook into various events Cypress emits
-  // `config` is the resolved Cypress config
+  // MongoDB task
+  on('task', {
+    queryMongoDB: async ({ collectionName, query, operation }: { collectionName: string; query: Record<string, unknown>; operation: string; }): Promise<unknown> => {
+      const client = await connectToMongoDB(config.env.MONGODB_URI as string);
+      const db = client.db(config.env.MONGODB_DB_NAME);
+      const collection = db.collection(collectionName);
 
-  // Add other plugin event handlers below
+      try {
+        let result: unknown;
+        switch (operation) {
+          case 'find':
+            result = await collection.find(query).toArray();
+            break;
+          // Include other operations like insert, update, delete, etc.
+          default:
+            throw new Error(`Operation "${operation}" not supported`);
+        }
+        return result;
+      } catch (error) {
+        throw error;
+      } finally {
+        await client.close();
+      }
+    },
+  });
+
+  // Add other plugin event handlers below if needed
 };

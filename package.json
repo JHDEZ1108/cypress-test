@@ -35,10 +35,13 @@
     "redux": "^5.0.1"
   },
   "devDependencies": {
+    "@types/mysql": "^2.15.25",
+    "@types/node": "^20.11.16",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.18",
     "cypress": "^13.6.4",
     "json-server": "^1.0.0-alpha.23",
+    "mysql": "^2.18.1",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"
   }
